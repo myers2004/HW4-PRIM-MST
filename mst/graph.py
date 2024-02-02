@@ -1,5 +1,5 @@
 import numpy as np
-import heapq
+import heapq as hq
 from typing import Union
 
 class Graph:
@@ -25,6 +25,8 @@ class Graph:
         with open(path) as f:
             return np.loadtxt(f, delimiter=',')
 
+    
+    
     def construct_mst(self):
         """
     
@@ -42,3 +44,75 @@ class Graph:
 
         """
         self.mst = None
+
+        #first we have to make our pq updatable
+
+        pq = []                         # list of entries arranged in a heap
+        entry_finder = {}               # mapping of tasks to entries
+        REMOVED = '<removed-task>'      # placeholder for a removed task
+
+        def add_task(task, priority=0, count=0):
+            'Add a new task or update the priority of an existing task'
+            if task in entry_finder:
+                remove_task(task)
+            entry = [priority, count, task]
+            entry_finder[task] = entry
+            hq.heappush(pq, entry)
+
+        def remove_task(task):
+            'Mark an existing task as REMOVED.  Raise KeyError if not found.'
+            entry = entry_finder.pop(task)
+            entry[-1] = REMOVED
+
+        def pop_task():
+            'Remove and return the lowest priority task. Raise KeyError if empty.'
+            while pq:
+                priority, count, task = hq.heappop(pq)
+                if task is not REMOVED:
+                    del entry_finder[task]
+                    return task
+            raise KeyError('pop from an empty priority queue')
+
+        S = []
+        T = {}
+
+        num_rows, num_col = np.shape(self.adj_mat)
+
+        last_node = {i: None for i in range(num_rows)}
+
+        s = 0
+        pi = {}
+
+        pi[s] = 0
+
+        inf = 999999999
+
+
+        for v in range(num_rows):
+            if v != s:
+                pi[v] = inf
+        for v in range(num_rows):
+            add_task(v, pi[v], v)
+        i = 0
+        while len(T) < num_rows - 1:
+            u = pop_task()
+            S.append(u)
+            if last_node[u] != None:
+                T[u] = last_node[u]
+            for v in range(num_col):
+                if self.adj_mat[u][v] != 0 and v not in S:
+                    if self.adj_mat[u][v] < pi[v]:
+                        pi[v] = self.adj_mat[u][v]
+                        add_task(v, pi[v],i)
+                        last_node[v] = u
+                        i += 1
+        
+        mst = np.zeros((num_rows,num_col))
+        for key in T.keys():
+            mst[key][T[key]] = 1
+            mst[T[key]][key] = 1
+        self.mst = mst
+        return(mst)
+
+
+
