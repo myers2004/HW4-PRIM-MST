@@ -35,6 +35,15 @@ def check_mst(adj_mat: np.ndarray,
             total += mst[i, j]
     assert approx_equal(total, expected_weight), 'Proposed MST has incorrect expected weight'
 
+    num_nodes = np.shape(adj_mat)[0]
+    num_mst_edges = 0
+    for i in range(mst.shape[0]):
+        for j in range(i+1):
+            if mst[i][j] > 0:
+                num_mst_edges += 1
+    assert num_mst_edges == num_nodes - 1
+
+
 
 def test_mst_small():
     """

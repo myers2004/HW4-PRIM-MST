@@ -47,7 +47,7 @@ class Graph:
 
         #first we have to make our pq updatable
 
-        pq = []                         # list of entries arranged in a heap
+        pq = []                         # list of entries arranged in a heap, our pq
         entry_finder = {}               # mapping of tasks to entries
         REMOVED = '<removed-task>'      # placeholder for a removed task
 
@@ -65,54 +65,73 @@ class Graph:
             entry[-1] = REMOVED
 
         def pop_task():
-            'Remove and return the lowest priority task. Raise KeyError if empty.'
+            'Remove and return the lowest priority task. Returns Empty Queue if empty'
+            'We will use this return to stop Prims algorithm'
             while pq:
                 priority, count, task = hq.heappop(pq)
                 if task is not REMOVED:
                     del entry_finder[task]
                     return task
-            raise KeyError('pop from an empty priority queue')
+            return 'Empty Queue'
 
-        S = []
-        T = {}
+        S = []                      #To store the explored nodes
+        T = {}                      #To store the edge index to include in our mst
 
-        num_rows, num_col = np.shape(self.adj_mat)
+        num_nodes = np.shape(self.adj_mat)[0]
 
-        last_node = {i: None for i in range(num_rows)}
+        last_node = {i: None for i in range(num_nodes)} #Will hold each node's predecessor (pred)
 
-        s = 0
-        pi = {}
+        s = np.random.randint(0,num_nodes, 1)[0] #Get a random start node
 
-        pi[s] = 0
+        pi = {} #Will hold the edge weight (distance) of the edge connecting unexplored node to the expolored reigon
+
+        pi[s] = 0 #set the distance to the start node to zero
 
         inf = 999999999
 
+        #Start Prim's alogorithm
 
-        for v in range(num_rows):
+        #Intilize all nodes but start with infinite distance to explored reiogn
+        for v in range(num_nodes):
             if v != s:
                 pi[v] = inf
-        for v in range(num_rows):
+        
+        #Add all nodes with their priority and step added to pq
+        for v in range(num_nodes):
             add_task(v, pi[v], v)
-        i = 0
-        while len(T) < num_rows - 1:
-            u = pop_task()
-            S.append(u)
-            if last_node[u] != None:
+
+        #Go through the pq, adding the closest node to the explored reigon connected
+        # to the explored reigon and the connecting edge to the mst. Update priority of 
+        # nodes in unexplored reigon
+        i = 0                                            #stores step count a node is added to pq, as a tie breaker
+        while len(pq) > 0:
+            u = pop_task()                               #get lowest priorty node, call it u
+            if u == 'Empty Queue':                       #if pop_task reports the queue is empty, stop
+                break
+            S.append(u)                                  #add u to the explored region
+            
+            if last_node[u] != None:                     #for every node but the start node, add its pred to T
                 T[u] = last_node[u]
-            for v in range(num_col):
+            
+            #If an edge exists connecting u and an unexplored node v, AND the edge weight 
+            # connecting u to v is less than the current distance from the explored reigon
+            # to v, update v's priority(distance) with that edge weight and its pred with u
+            for v in range(num_nodes):
                 if self.adj_mat[u][v] != 0 and v not in S:
                     if self.adj_mat[u][v] < pi[v]:
-                        pi[v] = self.adj_mat[u][v]
-                        add_task(v, pi[v],i)
-                        last_node[v] = u
-                        i += 1
+                        pi[v] = self.adj_mat[u][v]        #update distance
+                        add_task(v, pi[v],i)              #update priority
+                        last_node[v] = u                  #update pred
+                        i += 1                            #add 1 to step count
+
         
-        mst = np.zeros((num_rows,num_col))
+        #Go from dict T to np.array mst
+        mst = np.zeros((num_nodes,num_nodes))              #intilize mst
+        #If an edge index is in our mst dict representation, add its weight to our mst array representation
         for key in T.keys():
-            mst[key][T[key]] = 1
-            mst[T[key]][key] = 1
-        self.mst = mst
-        return(mst)
+            mst[key][T[key]] = self.adj_mat[key][T[key]]   
+            mst[T[key]][key] = self.adj_mat[T[key]][key]        #our mst is symmetric
+        self.mst = mst                                          #store our mst
 
 
 
