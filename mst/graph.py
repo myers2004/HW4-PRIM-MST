@@ -1,6 +1,7 @@
 import numpy as np
 import heapq as hq
 from typing import Union
+import os
 
 class Graph:
 
@@ -14,11 +15,23 @@ class Graph:
     
         """
         if type(adjacency_mat) == str:
+            if os.stat(adjacency_mat).st_size == 0:
+                raise ImportError('Input file is empty')
             self.adj_mat = self._load_adjacency_matrix_from_csv(adjacency_mat)
         elif type(adjacency_mat) == np.ndarray:
             self.adj_mat = adjacency_mat
         else: 
             raise TypeError('Input must be a valid path or an adjacency matrix')
+        
+        num_nodes, num_col = np.shape(self.adj_mat)
+        row_sums = np.sum(self.adj_mat, axis=1)
+        for i in range(num_nodes):
+            if row_sums[i] < .00001:
+                raise ValueError('Input matrix had unconnected node')
+        if num_nodes != num_col:
+            raise ValueError('Input matrix is has asymmetric dimensions')
+        
+        
         self.mst = None
 
     def _load_adjacency_matrix_from_csv(self, path: str) -> np.ndarray:
@@ -132,6 +145,7 @@ class Graph:
             mst[key][T[key]] = self.adj_mat[key][T[key]]   
             mst[T[key]][key] = self.adj_mat[T[key]][key]        #our mst is symmetric
         self.mst = mst                                          #store our mst
+        return mst
 
 
 

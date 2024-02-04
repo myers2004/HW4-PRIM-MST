@@ -29,20 +29,32 @@ def check_mst(adj_mat: np.ndarray,
     def approx_equal(a, b):
         return abs(a - b) < allowed_error
 
+    #Check mst weight for against known correct weight
     total = 0
     for i in range(mst.shape[0]):
         for j in range(i+1):
             total += mst[i, j]
     assert approx_equal(total, expected_weight), 'Proposed MST has incorrect expected weight'
 
+    #Check that mst has number of nodes - 1 edges
     num_nodes = np.shape(adj_mat)[0]
     num_mst_edges = 0
     for i in range(mst.shape[0]):
         for j in range(i+1):
             if mst[i][j] > 0:
                 num_mst_edges += 1
-    assert num_mst_edges == num_nodes - 1
+    assert num_mst_edges == num_nodes - 1,       'Proposed MST has wrong number of edges'
 
+    #Check that mst is symmetric
+    for i in range(num_nodes):
+        for j in range(num_nodes):
+            assert approx_equal(mst[i][j], mst [j][i]),      'Proposed MST is asymmetric'
+
+
+    #Check that every node is visited in the mst
+    row_sums = np.sum(mst, axis=1)
+    for i in range(num_nodes):
+        assert row_sums[i] > 0,                              'A node is not connected'
 
 
 def test_mst_small():
@@ -80,4 +92,32 @@ def test_mst_student():
     TODO: Write at least one unit test for MST construction.
     
     """
-    pass
+    #Check an error is raised if an m x n matrix where m != n is input
+    file_path = './data/asymmetric.csv'
+    with pytest.raises(ValueError):
+        asym = Graph(file_path)
+
+    #Check an error is raised if an empty file is input
+    file_path = './data/empty.csv'
+    with pytest.raises(ImportError):
+        empty = Graph(file_path)
+
+    #Check an error is raised if an adj matrix with a node with no edges
+    file_path = './data/unconnected.csv'
+    with pytest.raises(ValueError):
+        unconnected = Graph(file_path)
+
+    #Check an error is raised if a file is load in that doesn't exist
+    file_path = './data/doesnt_exist.csv'
+    with pytest.raises(FileNotFoundError):
+        no_file = Graph(file_path)
+
+    #Check an error is raised if type of argument is not string or np.array
+    with pytest.raises(TypeError):
+        wrong_type = Graph(32.4)
+
+
+    
+
+
+    
