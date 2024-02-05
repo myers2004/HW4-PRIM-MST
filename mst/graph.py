@@ -59,6 +59,9 @@ class Graph:
         self.mst = None
 
         #first we have to make our pq updatable
+        #Thankfully, the heapq documentation has exactly how to do that:
+        # The three functions below are from https://docs.python.org/3/library/heapq.html
+        # with a slight modification to the return in pop_task()
 
         pq = []                         # list of entries arranged in a heap, our pq
         entry_finder = {}               # mapping of tasks to entries
