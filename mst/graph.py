@@ -63,6 +63,9 @@ class Graph:
         # The three functions below are from https://docs.python.org/3/library/heapq.html
         # with a slight modification to the return in pop_task()
 
+        #Uses a dictionary to make entires indexable and if an entyr is updated, sets the
+        # name of the original entry to <removed-task>
+
         pq = []                         # list of entries arranged in a heap, our pq
         entry_finder = {}               # mapping of tasks to entries
         REMOVED = '<removed-task>'      # placeholder for a removed task
